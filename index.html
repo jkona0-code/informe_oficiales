@@ -120,7 +120,8 @@
   #btn-whatsapp{ background:var(--verde); }
   #btn-whatsapp:hover:not(:disabled){ background:var(--verde-oscuro); }
   #btn-whatsapp:disabled{ background:#9aa7bd; cursor:not-allowed; opacity:.65; }
-  #status-mensaje{ font-size:12px; color:var(--rojo); margin-top:6px; min-height:16px; font-weight:600; }
+  .destino-info{ font-size:12px; color:var(--azul); margin-top:5px; font-weight:600; }
+  #status-mensaje{ font-size:12px; color:var(--rojo); margin-top:4px; min-height:16px; font-weight:600; }
 
   /* Modal para compartir / WhatsApp */
   .modal-overlay{
@@ -134,6 +135,10 @@
   }
   .modal-contenido h3{ color:var(--azul); margin-top:0; font-size:17px; }
   .modal-contenido p{ color:var(--gris); font-size:13px; line-height:1.5; margin:8px 0; }
+  .badge-numero{
+    background:#e9eff8; color:var(--azul); padding:4px 10px; border-radius:4px;
+    font-weight:700; font-size:13px; display:inline-block; margin:6px 0;
+  }
   .modal-botones{ display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
   .modal-botones a, .modal-botones button{
     padding:9px 18px; border-radius:5px; text-decoration:none; font-weight:600;
@@ -190,6 +195,7 @@
 <div class="toolbar">
   <button id="btn-imprimir" onclick="intentarImprimir()">🖨️ Imprimir / Guardar PDF</button>
   <button id="btn-whatsapp" onclick="enviarPorWhatsApp()" disabled>📱 Enviar por WhatsApp</button>
+  <div class="destino-info">Destino WhatsApp: +56 9 5473 8662</div>
   <div id="status-mensaje"></div>
 </div>
 
@@ -197,11 +203,11 @@
 <div class="modal-overlay" id="modal-wa">
   <div class="modal-contenido">
     <h3>📄 Informe Preparado</h3>
-    <p id="modal-desc">El PDF se ha generado y descargado a tu equipo.</p>
-    <ol style="text-align:left; font-size:12.5px; color:var(--gris); line-height:1.7; padding-left:20px;">
-      <li>Se abrirá WhatsApp con el resumen completo del informe.</li>
-      <li>Si lo deseas, puedes adjuntar el PDF descargado en el chat.</li>
-      <li>Número de destino: <strong>+56 9 5473 8662</strong></li>
+    <p id="modal-desc">El PDF se ha generado y descargado en tu dispositivo.</p>
+    <div class="badge-numero">Destino: +56 9 5473 8662</div>
+    <ol style="text-align:left; font-size:12.5px; color:var(--gris); line-height:1.7; padding-left:20px; margin-top:8px;">
+      <li>Se abrirá WhatsApp con el resumen completo del informe listo para enviar.</li>
+      <li>Adjunte el PDF descargado en el chat para enviar el documento oficial.</li>
     </ol>
     <div class="modal-botones">
       <a id="link-wa" href="#" target="_blank" class="btn-wa">📲 Abrir WhatsApp</a>
@@ -213,7 +219,8 @@
 <div class="hoja" id="hoja-informe">
 
   <header>
-    <img class="logo" src="data:image/webp;base64,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" alt="Logo IPECHI">
+    <!-- Logo IPECHI con Base64 original completo -->
+    <img class="logo" src="data:image/jpeg;base64,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" alt="Logo IPECHI">
     <div class="iglesia">IGLESIA PENTECOSTAL DE CHILE</div>
     <div class="guia">GUÍA PARA EL TRABAJO LOCAL</div>
   </header>
@@ -691,7 +698,7 @@ async function enviarPorWhatsApp(){
     // Flujo estándar (PC / Web): Configurar modal y abrir enlace
     document.getElementById('link-wa').href = urlWhatsApp;
     document.getElementById('modal-wa').classList.add('activo');
-    status.textContent = "✅ PDF descargado. Abriendo WhatsApp...";
+    status.textContent = "✅ PDF descargado. Abriendo WhatsApp (+56 9 5473 8662)...";
 
     setTimeout(() => {
       window.open(urlWhatsApp, '_blank');
