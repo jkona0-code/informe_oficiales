@@ -8,14 +8,16 @@
 <style>
   :root{
     --azul:#1b3a6b;
-    --azul-claro:#e9eff8;
+    --azul-claro:#edf2f9;
+    --azul-borde:#c4d3e8;
     --rojo:#b5251f;
     --gris:#555;
+    --gris-claro:#777;
     --borde:#333;
     --verde:#25d366;
     --verde-oscuro:#128c7e;
   }
-  *{box-sizing:border-box;}
+  *{ box-sizing:border-box; }
   body{
     font-family:'Segoe UI', Arial, sans-serif;
     color:#1a1a1a;
@@ -29,29 +31,39 @@
     width:210mm;
     max-width:100%;
     margin:0 auto;
-    padding:18px 28px 20px;
+    padding:16px 26px 18px;
     border-radius:4px;
     box-shadow:0 0 10px rgba(0,0,0,.10);
+    position:relative;
   }
 
-  /* Header compacto para asegurar 1 página A4 */
+  /* Encabezado en gris con fecha y hora de generación */
+  .fecha-generacion{
+    font-size:10px;
+    color:var(--gris-claro);
+    text-align:right;
+    margin-bottom:4px;
+    font-style:italic;
+  }
+
+  /* Header principal */
   header{ text-align:center; margin-bottom:4px; }
   header .iglesia{
     font-weight:700; letter-spacing:.4px; color:var(--azul); font-size:13px; line-height:1.2;
   }
-  header .guia{ font-size:11px; color:var(--gris); margin-top:1px; }
+  header .guia{ font-size:11px; color:var(--gris); margin-top:2px; }
   header .logo{
-    width:48px; height:auto; margin:3px auto; display:block;
+    width:48px; height:auto; margin:2px auto 4px; display:block;
   }
   h1{
     text-align:center;
-    font-size:15.5px;
+    font-size:15px;
     color:var(--azul);
-    border-top:2px solid var(--azul);
-    border-bottom:2px solid var(--azul);
+    border-top:2.5px solid var(--azul);
+    border-bottom:2.5px solid var(--azul);
     padding:5px 0;
     margin:8px 0 10px;
-    letter-spacing:.4px;
+    letter-spacing:.5px;
   }
 
   .fila{
@@ -69,18 +81,18 @@
   }
   textarea{ resize:none; }
   fieldset{
-    border:1px solid #c9d3e3; border-radius:4px; margin-bottom:9px; padding:8px 12px 10px;
+    border:1px solid var(--azul-borde); border-radius:4px; margin-bottom:8px; padding:7px 12px 9px;
     background:var(--azul-claro);
   }
   legend{
-    font-weight:700; color:var(--azul); padding:0 6px; font-size:12.5px;
+    font-weight:700; color:var(--azul); padding:0 6px; font-size:12px;
   }
-  .sub{ font-size:10.5px; color:var(--gris); margin:-3px 0 7px; }
+  .sub{ font-size:10.5px; color:var(--gris); margin:-2px 0 6px; }
 
-  /* Tabla de visitas compacta */
+  /* Tabla de visitas */
   table.visitas{ width:100%; border-collapse:collapse; background:#fff; }
   table.visitas th, table.visitas td{
-    border:1px solid #c9d3e3; padding:5px 8px; text-align:center; font-size:12px;
+    border:1px solid var(--azul-borde); padding:4px 8px; text-align:center; font-size:11.5px;
   }
   table.visitas th{ background:#dfe7f5; color:var(--azul); font-weight:600; }
   table.visitas td.mes{ text-align:left; font-weight:600; }
@@ -89,25 +101,19 @@
   .check-item{ display:flex; align-items:center; gap:6px; font-size:12px; }
   .check-item input{ width:15px; height:15px; cursor:pointer; }
   .proyectos-grid{
-    display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px 14px; margin-top:7px;
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px 14px; margin-top:6px;
   }
   .radio-inline{ display:flex; gap:20px; align-items:center; }
   .radio-inline label{ display:flex; align-items:center; gap:5px; font-weight:600; text-transform:none; margin:0; font-size:12px; }
   .radio-inline input{ width:15px; height:15px; cursor:pointer; }
-  textarea.grande{ min-height:48px; height:48px; }
-  textarea.mediana{ min-height:40px; height:40px; }
+  textarea.grande{ min-height:46px; height:46px; }
+  textarea.mediana{ min-height:38px; height:38px; }
 
-  .firma{
-    margin-top:14px; text-align:center;
-  }
-  .firma .linea{
-    border-top:1.2px solid #333; width:220px; margin:22px auto 4px;
-  }
-  .firma .rotulo{ font-weight:700; letter-spacing:.4px; color:var(--azul); font-size:11.5px; }
   footer{
-    text-align:center; font-size:10px; color:var(--gris); margin-top:10px;
+    text-align:center; font-size:10px; color:var(--gris); margin-top:8px;
   }
 
+  /* Barra de herramientas */
   .toolbar{
     text-align:center; margin-bottom:14px;
   }
@@ -123,7 +129,7 @@
   .destino-info{ font-size:12px; color:var(--azul); margin-top:5px; font-weight:600; }
   #status-mensaje{ font-size:12px; color:var(--rojo); margin-top:4px; min-height:16px; font-weight:600; }
 
-  /* Modal para compartir / WhatsApp */
+  /* Modal WhatsApp */
   .modal-overlay{
     display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.55); z-index:1000; justify-content:center; align-items:center;
@@ -153,39 +159,38 @@
   @media (max-width: 768px){
     body{ padding:10px 8px 30px; }
     .hoja{ width:100%; padding:14px 12px 18px; }
-    h1{ font-size:14.5px; }
+    h1{ font-size:14px; }
     .campo.corto{ max-width:100%; flex:1 1 100%; }
     .campo{ min-width:0; flex:1 1 100%; }
     .proyectos-grid{ grid-template-columns:1fr 1fr; gap:6px 10px; }
     .toolbar{ display:flex; flex-direction:column; gap:8px; align-items:center; }
     .toolbar button{ width:100%; max-width:300px; margin:0; padding:10px 14px; }
-    table.visitas th, table.visitas td{ padding:5px 3px; font-size:11px; }
+    table.visitas th, table.visitas td{ padding:4px 3px; font-size:11px; }
   }
 
   @media (max-width: 480px){
     body{ padding:6px 4px 24px; }
     .hoja{ padding:12px 8px 16px; }
     header .iglesia{ font-size:12px; }
-    header .logo{ width:42px; }
+    header .logo{ width:40px; }
     .check-row{ gap:8px 12px; }
     .check-item{ font-size:11.5px; }
     .check-item input, .radio-inline input{ width:18px; height:18px; }
     .proyectos-grid{ grid-template-columns:1fr; }
     table.visitas th, table.visitas td{ padding:4px 2px; font-size:10.5px; }
-    .firma .linea{ width:180px; }
   }
 
-  /* ========== IMPRESIÓN / PDF (1 SOLA HOJA A4) ========== */
+  /* ========== IMPRESIÓN / PDF (Exactamente como Imagen 2 en 1 sola hoja A4) ========== */
   @page{
     size: A4 portrait;
-    margin: 5mm 6mm;
+    margin: 6mm 8mm;
   }
   @media print{
     body{ background:#fff; padding:0; max-width:none; }
     .hoja{ box-shadow:none; padding:4px 6px; width:100%; border-radius:0; }
     .toolbar, .modal-overlay{ display:none !important; }
-    fieldset{ background:#fff !important; }
-    table.visitas th{ background:#eee !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    fieldset{ background:#edf2f9 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.visitas th{ background:#dfe7f5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     header .logo{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 </style>
@@ -218,9 +223,11 @@
 
 <div class="hoja" id="hoja-informe">
 
+  <!-- Encabezado en gris con fecha y hora de generación -->
+  <div class="fecha-generacion" id="fecha-generacion"></div>
+
   <header>
-    <!-- Logo IPECHI con Base64 original completo -->
-    <img class="logo" src="data:image/jpeg;base64,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" alt="Logo IPECHI">
+    <img class="logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCADIAHQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD//2Q==" alt="Logo IPECHI">
     <div class="iglesia">IGLESIA PENTECOSTAL DE CHILE</div>
     <div class="guia">GUÍA PARA EL TRABAJO LOCAL</div>
   </header>
@@ -326,7 +333,7 @@
       <div class="check-item"><input type="checkbox" id="p5"><label for="p5" style="text-transform:none;font-weight:400;">Visita Hnos. Enfermos</label></div>
       <div class="check-item"><input type="checkbox" id="p6"><label for="p6" style="text-transform:none;font-weight:400;">Evangelismo</label></div>
     </div>
-    <div class="fila" style="margin-top:7px;">
+    <div class="fila" style="margin-top:6px;">
       <div class="campo">
         <label>Otros (indique cuál)</label>
         <input type="text" id="otros-proyecto">
@@ -415,6 +422,21 @@ function cerrarModal(){
   document.getElementById('modal-wa').classList.remove('activo');
 }
 
+function actualizarFechaGeneracion(){
+  const ahora = new Date();
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const anio = ahora.getFullYear();
+  const horas = String(ahora.getHours()).padStart(2, '0');
+  const minutos = String(ahora.getMinutes()).padStart(2, '0');
+  const segundos = String(ahora.getSeconds()).padStart(2, '0');
+  
+  const el = document.getElementById('fecha-generacion');
+  if(el){
+    el.textContent = `Generado el: ${dia}/${mes}/${anio} ${horas}:${minutos}:${segundos}`;
+  }
+}
+
 /* ========== VALIDACIÓN CAMPOS INICIALES (IMPRESIÓN) ========== */
 function validarCamposIniciales(){
   const campos = [
@@ -444,6 +466,7 @@ function intentarImprimir(){
     return;
   }
   status.textContent = '';
+  actualizarFechaGeneracion();
   window.print();
 }
 
@@ -643,6 +666,7 @@ async function enviarPorWhatsApp(){
 
   btn.disabled = true;
   status.textContent = "Generando PDF de 1 página...";
+  actualizarFechaGeneracion();
 
   const hoja = document.getElementById('hoja-informe');
   const nombrePdf = nombreArchivo();
@@ -711,6 +735,7 @@ async function enviarPorWhatsApp(){
 /* ========== INICIALIZACIÓN Y EVENT LISTENERS ========== */
 document.addEventListener('DOMContentLoaded', function(){
   cargarDeLocalStorage();
+  actualizarFechaGeneracion();
   document.querySelectorAll('input, select, textarea').forEach(el => {
     el.addEventListener('input', verificarFormulario);
     el.addEventListener('change', verificarFormulario);
