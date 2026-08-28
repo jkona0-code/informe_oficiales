@@ -187,7 +187,7 @@
     table.visitas th, table.visitas td{ padding:4px 2px; font-size:10.5px; }
   }
 
-  /* ========== SALTO DE PÁGINA E IMPRESIÓN (2 Páginas A4) ========== */
+  /* ========== SALTO DE PÁGINA E IMPRESIÓN / MODO PDF (2 Páginas A4 exactas) ========== */
   .salto-pagina {
     page-break-before: always;
     break-before: page;
@@ -198,13 +198,34 @@
   }
   @media print{
     body{ background:#fff; padding:0; max-width:none; }
-    .hoja{ box-shadow:none; padding:4px 6px; width:100%; border-radius:0; margin-bottom:0; }
+    .hoja{ box-shadow:none; padding:4px 6px; width:100%; border-radius:0; margin-bottom:0; min-height:280mm; }
     .hoja.pagina-1{ page-break-after: always; break-after: page; }
+    .hoja.pagina-2{ page-break-before: always; break-before: page; padding-top:10px; }
     .toolbar, .modal-overlay{ display:none !important; }
     fieldset{ background:#edf2f9 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     table.visitas th{ background:#dfe7f5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     header .logo{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    textarea{ overflow:visible !important; }
+  }
+
+  /* Estilos específicos cuando se genera el PDF */
+  .modo-pdf-activo .hoja{
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 10px 0 !important;
+    box-shadow: none !important;
+    padding: 8mm 10mm !important;
+    box-sizing: border-box !important;
+    min-height: 275mm !important;
+  }
+  .modo-pdf-activo .pagina-1{
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  .modo-pdf-activo .pagina-2{
+    page-break-before: always !important;
+    break-before: page !important;
+    padding-top: 8mm !important;
+    margin-top: 0 !important;
   }
 </style>
 </head>
@@ -446,6 +467,42 @@ function inicializarAutoAjuste(){
   });
 }
 
+/* ========== REEMPLAZO TEMPORAL DE TEXTAREA A DIV PARA CAPTURA EXACTA EN PDF ========== */
+function prepararTextareasParaPDF(){
+  const textareas = document.querySelectorAll('textarea');
+  const clones = [];
+  textareas.forEach(tx => {
+    const div = document.createElement('div');
+    div.className = 'textarea-pdf-clone';
+    div.textContent = tx.value || ' ';
+    div.style.whiteSpace = 'pre-wrap';
+    div.style.wordBreak = 'break-word';
+    div.style.fontFamily = 'inherit';
+    div.style.fontSize = '12.5px';
+    div.style.lineHeight = '1.45';
+    div.style.color = '#1a1a1a';
+    div.style.padding = '6px 8px';
+    div.style.border = '1px solid #b9c2d0';
+    div.style.borderRadius = '3px';
+    div.style.background = '#fdfdfd';
+    div.style.minHeight = tx.classList.contains('grande') ? '110px' : '65px';
+    div.style.boxSizing = 'border-box';
+    div.style.width = '100%';
+    div.style.textAlign = 'left';
+
+    tx.style.display = 'none';
+    tx.parentNode.insertBefore(div, tx);
+    clones.push({ tx, div });
+  });
+
+  return function restaurar(){
+    clones.forEach(({ tx, div }) => {
+      tx.style.display = '';
+      if(div.parentNode) div.parentNode.removeChild(div);
+    });
+  };
+}
+
 function nombreArchivo(){
   const local = document.getElementById('local').value || "sin-local";
   const periodo = document.getElementById('periodo').value || "sin-periodo";
@@ -502,7 +559,10 @@ function intentarImprimir(){
   }
   status.textContent = '';
   actualizarFechaGeneracion();
+
+  const restaurar = prepararTextareasParaPDF();
   window.print();
+  setTimeout(() => { restaurar(); }, 500);
 }
 
 /* ========== VALIDACIÓN COMPLETA (WHATSAPP) ========== */
@@ -709,30 +769,29 @@ async function enviarPorWhatsApp(){
   status.textContent = "Generando PDF oficial...";
   actualizarFechaGeneracion();
 
-  // Asegurar que las textareas estén con su altura completa antes de capturar el PDF
-  document.querySelectorAll('textarea').forEach(tx => autoAjustarTextarea(tx));
+  const contenedor = document.getElementById('hoja-informe');
+  contenedor.classList.add('modo-pdf-activo');
+  const restaurarTextareas = prepararTextareasParaPDF();
 
-  const hoja = document.getElementById('hoja-informe');
   const nombrePdf = nombreArchivo();
 
-  // Opciones para captura fiel de las páginas sin scrollbars
   const opciones = {
-    margin:       [4, 4, 4, 4], // mm
+    margin:       [0, 0, 0, 0],
     filename:     nombrePdf,
-    image:        { type: 'jpeg', quality: 0.96 },
+    image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak:    { mode: ['css', 'legacy'] }
+    pagebreak:    { mode: ['css', 'legacy'], before: '.pagina-2' }
   };
 
   try{
     // Generar PDF como Blob
-    const pdfBlob = await html2pdf().set(opciones).from(hoja).outputPdf('blob');
+    const pdfBlob = await html2pdf().set(opciones).from(contenedor).outputPdf('blob');
     const pdfFile = new File([pdfBlob], nombrePdf, { type: 'application/pdf' });
 
     const textoMensaje = generarTextoWhatsApp();
 
-    // 1. En Dispositivos Móviles / Tablets: Compartir directamente con archivo adjunto vía Web Share API
+    // 1. En Dispositivos Móviles / Tablets: Adjuntar directamente con Web Share API
     if(navigator.canShare && navigator.canShare({ files: [pdfFile] })){
       try{
         await navigator.share({
@@ -744,14 +803,13 @@ async function enviarPorWhatsApp(){
         btn.disabled = false;
         return;
       }catch(shareErr){
-        // Si el usuario cancela la ventana nativa de compartir, no mostramos error
         if(shareErr.name !== 'AbortError'){
-          console.warn('Share API falló, pasando a descarga:', shareErr);
+          console.warn('Share API cancelado o no disponible:', shareErr);
         }
       }
     }
 
-    // 2. En PC / Navegadores de escritorio: Descarga automática + apertura de chat
+    // 2. En PC / Navegadores de escritorio: Descarga automática + enlace directo
     const urlBlob = URL.createObjectURL(pdfBlob);
     const a = document.createElement('a');
     a.href = urlBlob;
@@ -776,6 +834,8 @@ async function enviarPorWhatsApp(){
     console.error(err);
     status.textContent = "❌ Error generando PDF. Use el botón Imprimir.";
   }finally{
+    restaurarTextareas();
+    contenedor.classList.remove('modo-pdf-activo');
     btn.disabled = false;
   }
 }
