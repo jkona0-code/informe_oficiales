@@ -118,7 +118,7 @@
   .radio-inline input{ width:15px; height:15px; cursor:pointer; }
 
   footer{
-    text-align:center; font-size:10px; color:var(--gris); margin-top:16px;
+    text-align:center; font-size:10px; color:var(--gris); margin-top:14px;
   }
 
   /* Barra de herramientas */
@@ -188,24 +188,47 @@
     table.visitas th, table.visitas td{ padding:4px 2px; font-size:10.5px; }
   }
 
-  /* ========== SALTO DE PÁGINA E IMPRESIÓN (2 Páginas A4 exactas) ========== */
-  .pagina-2 {
-    page-break-before: always;
-    break-before: page;
-  }
+  /* ========== ESTILOS DE IMPRESIÓN Y EXPORTACIÓN PDF (ESTRICTAMENTE 2 PÁGINAS) ========== */
   @page{
     size: A4 portrait;
     margin: 6mm 8mm;
   }
   @media print{
-    body{ background:#fff; padding:0; max-width:none; }
-    .hoja{ box-shadow:none; padding:4px 6px; width:100%; border-radius:0; margin-bottom:0; }
+    body{ background:#fff; padding:0; margin:0; max-width:none; }
+    .hoja{ box-shadow:none; padding:4px 6px; width:100%; border-radius:0; margin:0; }
     .pagina-1{ page-break-after: always; break-after: page; }
-    .pagina-2{ page-break-before: always; break-before: page; padding-top:10px; margin-top:0; }
+    .pagina-2{ page-break-before: always; break-before: page; page-break-after: avoid; break-after: avoid; padding-top:10px; margin:0; }
     .toolbar, .modal-overlay{ display:none !important; }
     fieldset{ background:#edf2f9 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     table.visitas th{ background:#dfe7f5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     header .logo{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+
+  /* Clase temporal aplicada al exportar con html2pdf para evitar desborde a hoja 3 */
+  .exportando-pdf{
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .exportando-pdf .hoja{
+    margin: 0 !important;
+    box-shadow: none !important;
+    padding: 8mm 12mm !important;
+    border-radius: 0 !important;
+    width: 210mm !important;
+    box-sizing: border-box !important;
+  }
+  .exportando-pdf .pagina-1{
+    page-break-after: always !important;
+    break-after: page !important;
+    margin-bottom: 0 !important;
+  }
+  .exportando-pdf .pagina-2{
+    page-break-before: always !important;
+    break-before: page !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    padding-top: 8mm !important;
+    margin: 0 !important;
   }
 </style>
 </head>
@@ -359,7 +382,7 @@
   </div>
 
   <!-- ==================== PÁGINA 2: TEXTO LIBRE ==================== -->
-  <div class="hoja pagina-2 html2pdf__page-break">
+  <div class="hoja pagina-2">
     <fieldset>
       <legend>En conversación con el Hermano(a) Guía ¿Qué le manifestó?</legend>
       <div class="sub">Inquietudes, problemas con algún Hno., propuestas, necesidades.</div>
@@ -456,14 +479,14 @@ function prepararTextareasParaPDF(){
     div.style.whiteSpace = 'pre-wrap';
     div.style.wordBreak = 'break-word';
     div.style.fontFamily = 'inherit';
-    div.style.fontSize = '12.5px';
-    div.style.lineHeight = '1.45';
+    div.style.fontSize = '12px';
+    div.style.lineHeight = '1.4';
     div.style.color = '#1a1a1a';
     div.style.padding = '6px 8px';
     div.style.border = '1px solid #b9c2d0';
     div.style.borderRadius = '3px';
     div.style.background = '#fdfdfd';
-    div.style.minHeight = tx.classList.contains('grande') ? '110px' : '65px';
+    div.style.minHeight = tx.classList.contains('grande') ? '80px' : '55px';
     div.style.boxSizing = 'border-box';
     div.style.width = '100%';
     div.style.textAlign = 'left';
@@ -744,21 +767,22 @@ async function enviarPorWhatsApp(){
   const btn = document.getElementById('btn-whatsapp');
 
   btn.disabled = true;
-  status.textContent = "Generando PDF de 2 páginas...";
+  status.textContent = "Generando PDF oficial...";
   actualizarFechaGeneracion();
 
   const contenedor = document.getElementById('hoja-informe');
+  contenedor.classList.add('exportando-pdf');
   const restaurarTextareas = prepararTextareasParaPDF();
 
   const nombrePdf = nombreArchivo();
 
   const opciones = {
-    margin:       [4, 4, 4, 4],
+    margin:       [0, 0, 0, 0],
     filename:     nombrePdf,
     image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak:    { mode: ['css', 'legacy'] }
+    pagebreak:    { mode: ['css', 'legacy'], before: '.pagina-2' }
   };
 
   try{
@@ -812,6 +836,7 @@ async function enviarPorWhatsApp(){
     status.textContent = "❌ Error generando PDF. Use el botón Imprimir.";
   }finally{
     restaurarTextareas();
+    contenedor.classList.remove('exportando-pdf');
     btn.disabled = false;
   }
 }
