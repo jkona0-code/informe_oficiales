@@ -76,10 +76,19 @@
     margin-bottom:2px; text-transform:uppercase; letter-spacing:.3px;
   }
   input[type=text], select, textarea, input[type=date]{
-    width:100%; padding:5px 8px; border:1px solid #b9c2d0; border-radius:3px;
+    width:100%; padding:6px 8px; border:1px solid #b9c2d0; border-radius:3px;
     font-size:12.5px; font-family:inherit; background:#fdfdfd;
   }
-  textarea{ resize:none; }
+  /* Textareas autoajustables sin barra de scroll */
+  textarea{
+    resize:none;
+    overflow-y:hidden;
+    box-sizing:border-box;
+    line-height:1.45;
+  }
+  textarea.grande{ min-height:65px; }
+  textarea.mediana{ min-height:65px; }
+
   fieldset{
     border:1px solid var(--azul-borde); border-radius:4px; margin-bottom:8px; padding:7px 12px 9px;
     background:var(--azul-claro);
@@ -106,8 +115,6 @@
   .radio-inline{ display:flex; gap:20px; align-items:center; }
   .radio-inline label{ display:flex; align-items:center; gap:5px; font-weight:600; text-transform:none; margin:0; font-size:12px; }
   .radio-inline input{ width:15px; height:15px; cursor:pointer; }
-  textarea.grande{ min-height:160px; height:180px; }
-  textarea.mediana{ min-height:160px; height:180px; }
 
   footer{
     text-align:center; font-size:10px; color:var(--gris); margin-top:16px;
@@ -197,6 +204,7 @@
     fieldset{ background:#edf2f9 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     table.visitas th{ background:#dfe7f5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     header .logo{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    textarea{ overflow:visible !important; }
   }
 </style>
 </head>
@@ -209,7 +217,7 @@
   <div id="status-mensaje"></div>
 </div>
 
-<!-- Modal informativo para WhatsApp -->
+<!-- Modal informativo para WhatsApp (PC) -->
 <div class="modal-overlay" id="modal-wa">
   <div class="modal-contenido">
     <h3>📄 Informe Preparado</h3>
@@ -356,12 +364,12 @@
     <fieldset>
       <legend>En conversación con el Hermano(a) Guía ¿Qué le manifestó?</legend>
       <div class="sub">Inquietudes, problemas con algún Hno., propuestas, necesidades.</div>
-      <textarea class="grande" id="conversacion"></textarea>
+      <textarea class="grande" id="conversacion" placeholder="Escriba aquí lo manifestado por el Hno(a). Guía..."></textarea>
     </fieldset>
 
     <fieldset>
       <legend>Observaciones del Oficial Supervisor respecto a sus últimas visitas al Local</legend>
-      <textarea class="mediana" id="observaciones"></textarea>
+      <textarea class="mediana" id="observaciones" placeholder="Escriba aquí sus observaciones..."></textarea>
     </fieldset>
 
     <footer>
@@ -422,6 +430,20 @@ function toggleProyectos(mostrar){
   document.getElementById('grid-proyectos').style.display = mostrar ? "grid" : "none";
   document.getElementById('grid-proyectos').style.opacity = mostrar ? "1" : ".4";
   verificarFormulario();
+}
+
+/* ========== AUTO-AJUSTE DINÁMICO DE TEXTAREAS ========== */
+function autoAjustarTextarea(el){
+  if(!el) return;
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight + 2) + 'px';
+}
+
+function inicializarAutoAjuste(){
+  document.querySelectorAll('textarea').forEach(tx => {
+    tx.addEventListener('input', function(){ autoAjustarTextarea(this); });
+    autoAjustarTextarea(tx);
+  });
 }
 
 function nombreArchivo(){
@@ -593,8 +615,14 @@ function cargarDeLocalStorage(){
       }
     }
     if(datos.otrosProyecto) document.getElementById('otros-proyecto').value = datos.otrosProyecto;
-    if(datos.conversacion) document.getElementById('conversacion').value = datos.conversacion;
-    if(datos.observaciones) document.getElementById('observaciones').value = datos.observaciones;
+    if(datos.conversacion){
+      document.getElementById('conversacion').value = datos.conversacion;
+      autoAjustarTextarea(document.getElementById('conversacion'));
+    }
+    if(datos.observaciones){
+      document.getElementById('observaciones').value = datos.observaciones;
+      autoAjustarTextarea(document.getElementById('observaciones'));
+    }
   } catch(e) {}
 }
 
@@ -678,13 +706,16 @@ async function enviarPorWhatsApp(){
   const btn = document.getElementById('btn-whatsapp');
 
   btn.disabled = true;
-  status.textContent = "Generando PDF de 2 páginas...";
+  status.textContent = "Generando PDF oficial...";
   actualizarFechaGeneracion();
+
+  // Asegurar que las textareas estén con su altura completa antes de capturar el PDF
+  document.querySelectorAll('textarea').forEach(tx => autoAjustarTextarea(tx));
 
   const hoja = document.getElementById('hoja-informe');
   const nombrePdf = nombreArchivo();
 
-  // Opciones para 2 páginas A4 sin desborde
+  // Opciones para captura fiel de las páginas sin scrollbars
   const opciones = {
     margin:       [4, 4, 4, 4], // mm
     filename:     nombrePdf,
@@ -699,7 +730,28 @@ async function enviarPorWhatsApp(){
     const pdfBlob = await html2pdf().set(opciones).from(hoja).outputPdf('blob');
     const pdfFile = new File([pdfBlob], nombrePdf, { type: 'application/pdf' });
 
-    // Descarga automática en el equipo
+    const textoMensaje = generarTextoWhatsApp();
+
+    // 1. En Dispositivos Móviles / Tablets: Compartir directamente con archivo adjunto vía Web Share API
+    if(navigator.canShare && navigator.canShare({ files: [pdfFile] })){
+      try{
+        await navigator.share({
+          files: [pdfFile],
+          title: 'Informe Oficial Supervisor',
+          text: textoMensaje
+        });
+        status.textContent = "✅ Informe y PDF adjuntado correctamente.";
+        btn.disabled = false;
+        return;
+      }catch(shareErr){
+        // Si el usuario cancela la ventana nativa de compartir, no mostramos error
+        if(shareErr.name !== 'AbortError'){
+          console.warn('Share API falló, pasando a descarga:', shareErr);
+        }
+      }
+    }
+
+    // 2. En PC / Navegadores de escritorio: Descarga automática + apertura de chat
     const urlBlob = URL.createObjectURL(pdfBlob);
     const a = document.createElement('a');
     a.href = urlBlob;
@@ -709,26 +761,8 @@ async function enviarPorWhatsApp(){
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(urlBlob), 3000);
 
-    const textoMensaje = generarTextoWhatsApp();
     const urlWhatsApp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(textoMensaje)}`;
 
-    // Si el dispositivo soporta Web Share con archivos (Móviles / Tablets Android e iOS)
-    if(navigator.canShare && navigator.canShare({ files: [pdfFile] })){
-      try{
-        await navigator.share({
-          files: [pdfFile],
-          title: 'Informe Oficial Supervisor',
-          text: textoMensaje
-        });
-        status.textContent = "✅ Informe compartido exitosamente.";
-        btn.disabled = false;
-        return;
-      }catch(shareErr){
-        // Si el usuario cancela o falla share nativo, continuar con flujo WhatsApp Web
-      }
-    }
-
-    // Flujo estándar (PC / Web): Configurar modal y abrir enlace
     document.getElementById('link-wa').href = urlWhatsApp;
     document.getElementById('modal-wa').classList.add('activo');
     status.textContent = "✅ PDF descargado. Abriendo WhatsApp (+56 9 5473 8662)...";
@@ -748,6 +782,7 @@ async function enviarPorWhatsApp(){
 
 /* ========== INICIALIZACIÓN Y EVENT LISTENERS ========== */
 document.addEventListener('DOMContentLoaded', function(){
+  inicializarAutoAjuste();
   cargarDeLocalStorage();
   actualizarFechaGeneracion();
   document.querySelectorAll('input, select, textarea').forEach(el => {
