@@ -217,14 +217,22 @@
     width: 210mm !important;
     box-sizing: border-box !important;
   }
+  /* Cada .hoja corresponde a UNA página A4.
+     Solo se fuerza el salto DESPUÉS de la primera hoja.
+     No se fuerza otro salto antes de la segunda porque html2pdf
+     puede interpretarlo como un salto adicional (hoja 3 en algunos navegadores). */
+  .exportando-pdf .hoja{
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
   .exportando-pdf .pagina-1{
     page-break-after: always !important;
     break-after: page !important;
     margin-bottom: 0 !important;
   }
   .exportando-pdf .pagina-2{
-    page-break-before: always !important;
-    break-before: page !important;
+    page-break-before: auto !important;
+    break-before: auto !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
     padding-top: 8mm !important;
@@ -782,7 +790,10 @@ async function enviarPorWhatsApp(){
     image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak:    { mode: ['css', 'legacy'], before: '.pagina-2' }
+    // Usar solamente los saltos CSS definidos en .pagina-1.
+    // El modo 'legacy' + before:.pagina-2 puede insertar un salto
+    // adicional y terminar generando una tercera hoja.
+    pagebreak:    { mode: ['css'] }
   };
 
   try{
